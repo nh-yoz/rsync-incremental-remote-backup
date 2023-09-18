@@ -10,8 +10,9 @@
 #
 # LICENCE: WTFPL - comes with no warranty 
 #
-# Arguments
-# -v: verbose output (affects rsync and curl)
+# Options
+# -v verbose output (affects rsync and curl)
+# -d dry run (don't copy/delete files) 
 # -e <environment file> (required)
 #
 # VERSIONS (number | date | author | Description)
@@ -20,20 +21,21 @@
 ######################################################
 
 Usage() {
-    echo -e "Usage: ssh_rsync_backup.sh [-v] -e <environment file>\n\n"
+    echo -e "Usage: ssh_rsync_backup.sh [-v] [-d] -e <environment file>\n-v: verbose\n-d: dry-run"
 }
 
-while getopts "ve:" opt
+while getopts "vde:" opt
 do
     case $opt in
     v) RSYNC_OPTIONS+=(-v); VERBOSE='-v' ;;
-    e) ENV_FILE=${OPTARG}
-    *) echo -e "Invalid option "${$opt}"\n"; Usage; exit 1 ;;
+    d) RSYNC_OPTIONS+=(--dry-run) ;;
+    e) ENV_FILE=${OPTARG} ;;
+    *) Usage; exit 1 ;;
     esac
 done
 
 if [ -z ${ENV_FILE+x} ]; then Usage; exit 1; fi
-if [ ! -f ${ENV_FILE} ]; then echo -e "The environment file ${ENV_FILE} doesn't exist.\n"; exit 2; fi
+if [ ! -f ${ENV_FILE} ]; then echo -e "The file '${ENV_FILE}' doesn't exist.\n"; exit 2; fi
 
 # Loading environment
 . ${ENV_FILE}
