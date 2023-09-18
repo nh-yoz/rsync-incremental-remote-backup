@@ -131,7 +131,7 @@ do
     # Delete old backups
     if [ $MAX_INCREMENT -gt 0 ]
     then
-        Log "* Deleting old backups \(keep last ${MAX_INCREMENT}\)"
+        Log "* Deleting old backups (keep last ${MAX_INCREMENT})"
         COUNT=0
         find "${DESTINATION_PATH}" -maxdepth 1 -type d | sort -r | while read FOLDERNAME; do
             ((COUNT+=1))
