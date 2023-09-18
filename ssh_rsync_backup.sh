@@ -21,14 +21,14 @@
 ######################################################
 
 Usage() {
-    echo -e "Usage: ssh_rsync_backup.sh [-v] [-d] -e <environment file>\n-v: verbose\n-d: dry-run"
+    echo -e "Usage: ssh_rsync_backup.sh [-v] [-d] -e <environment file>\n-v: verbose\n-d: dry-run\n"
 }
 
 while getopts "vde:" opt
 do
     case $opt in
     v) RSYNC_OPTIONS+=(-v); VERBOSE='-v' ;;
-    d) RSYNC_OPTIONS+=(--dry-run) ;;
+    d) RSYNC_OPTIONS+=(--dry-run); DRY_RUN=1 ;;
     e) ENV_FILE=${OPTARG} ;;
     *) Usage; exit 1 ;;
     esac
@@ -78,7 +78,7 @@ GetDateTime() {
 }
 
 Log "**************************************
-**  Running script "$FILENAME"
+**  Running script "$FILENAME" $([ $DRY_RUN -eq 1 ] && echo "(Dry run)")
 **  Date: $(GetDateTime)
 **************************************"
 
@@ -97,6 +97,7 @@ do
    LATEST_LINK="${DESTINATION_PATH}/latest"
    RSYNC_DEST_PATH="${DESTINATION_PATH}/$(GetDateTime)"
    mkdir -p "${RSYNC_DEST_PATH}"
+   [ ! $? -eq 0 ] && Log "Cannot create folder ${RSYNC_DEST_PATH}" && ((FAILURE_COUNT+=1))
    Log "\n***** $(GetDateTime): Running rsync for ${_PATH}..."
    if [ ! -d "${LATEST_LINK}" ] # Symbolic link to latest doesn't exist -> first run
    then
@@ -114,14 +115,19 @@ do
    if [ $EXIT_CODE -eq 0 ]
    then # rsync succeded
         ((SUCCESS_COUNT+=1))
-        # Delete symbolic link latest
-        rm -f "${LATEST_LINK}"
-        # Create symbolic link to the recent created folder
-        ln -s "${RSYNC_DEST_PATH}" "${LATEST_LINK}"
+        if [ ! $DRY_RUN -eq 1 ]
+        then
+            # Delete symbolic link latest
+            rm -f "${LATEST_LINK}"
+            # Create symbolic link to the recent created folder
+            ln -s "${RSYNC_DEST_PATH}" "${LATEST_LINK}"
+        fi
     else
         ((FAILURE_COUNT+=1))
         rm -rf "${RSYNC_DEST_PATH}"
     fi
+    
+    [ $DRY_RUN -eq 1 ] && rm -rf "$RSYNC_DEST_PATH" > /dev/null 2>&1
     # Delete old backups
     if [ $MAX_INCREMENT -gt 0 ]
     then
@@ -129,7 +135,7 @@ do
         COUNT=0
         find "${DESTINATION_PATH}" -maxdepth 1 -type d | sort -r | while read FOLDERNAME; do
             ((COUNT+=1))
-            if [ $COUNT -gt $MAX_INCREMENT ] && [ ! "$FOLDERNAME" == "$DESTINATION_PATH" ]
+            if [ $COUNT -gt $MAX_INCREMENT ] && [ ! "$FOLDERNAME" == "$DESTINATION_PATH" ] && [ ! $DRY_RUN -eq 1 ]
             then
                 rm -rf "$FOLDERNAME"
                 [ $? -eq 0 ] && Log "Deleted folder: ${FOLDERNAME}" || Log "Error deleting ${FOLDERNAME}" && ((FAILURE_COUNT+=1))
@@ -141,7 +147,7 @@ done
 RUNNING=False
 
 # Append log 
-cat "$TMP_FILE" >> "$LOG_FILE"
+[ ! $DRY_RUN -eq 1 ] && cat "$TMP_FILE" >> "$LOG_FILE"
 
 SendEmail() { # Sends mail using declared constants. Requires one argument: The message file
     curl "$EMAIL_PROTOCOL://$EMAIL_HOST:$EMAIL_PORT" --mail-rcpt "$EMAIL_RECIPIENT" --upload-file "$1" --user "$EMAIL_USERNAME:$EMAIL_PASSWORD" $VERBOSE
