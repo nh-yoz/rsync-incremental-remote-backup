@@ -1,0 +1,2 @@
+*.env.sh
+!model.env.sh
