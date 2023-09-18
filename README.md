@@ -1,6 +1,6 @@
 # Incremental backup from remote
 ## Introduction
-A script running allowing to do backup from a remote device (server) to a local device (client). The script is run on device B.
+A script allowing to do backup from a remote device (server) to a local device (client).
 The script uses `rsync` for the backup and connects using `ssh` with public/private identity keys.
 
 I created this script because I needed a way to backup my NAS and my Raspberry to an external device - located at my parents' - if anything would happen (fire, burglary, disk corruption, ...). 
@@ -52,17 +52,17 @@ chmod 700 "${USERNAME}" "${USERNAME}/.ssh" "${USERNAME}/.ssh/authorized_keys" "/
 
 
 ### Setup script on local device
-1. Copy the script rsync_ to optional folder on the device where the backup is going (local device).
-2. Set the file executable: `chmod +x rsync.sh`
-3. Modify the script to fit your needs, i.e. change de constants in the first part using vi/vim/nano/... The script is well commented, you wouldn't have any difficulties doing this.
+1. Copy the script _ssh_rsync_backup.sh_ and _model.env.sh_ to optional folder on the device where the backup is going (local device).
+2. Set the file executable: `chmod +x ssh_rsync_backup.sh`.
+3. Create a copy of _model.env.sh_ (e.g. _my-raspberry.env.sh_) and edit it to fit your needs; _model.env.sh_ is well commented, you wouldn't have any difficulties doing this.
 
-> If you want to backup multiple devices, copy the script multiple time (i.e. rsync_backup_device_A.sh,  rsync_backup_device_B, ...).
+> If you want to backup multiple devices, create multiple environmental files.
 
 Try running the script:
 ```
-/bin/bash <path to script>
+/bin/bash <path to script> -e <my env file>
 ```
-The script creates a log-file in the same folder as the script (`script_file_name.log`)..
+The script creates a log-file in the same folder as the script (`environment_file_name.log`)..
 
 ### Schedule periodic backup
 On the local device, edit the crontab:
@@ -71,7 +71,7 @@ sudo crontab -e
 ```
 Add this line:
 ```
-0 1 * * 3,6 /bin/bash <path to script> # Will run at 1 am twice a week (wednesday and saturday). Search the internet for crontab syntax
+0 1 * * 3,6 /bin/bash <path to script> -e <path to environment file> # Will run at 1 am twice a week (wednesday and saturday). Search the internet for crontab syntax
 ```
 Save and exit
 
