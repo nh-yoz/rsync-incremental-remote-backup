@@ -41,7 +41,7 @@ if [ ! -f ${ENV_FILE} ]; then echo -e "The environment file ${ENV_FILE} doesn't 
 # Initializing constants;
 RSYNC_OPTIONS=(-a --stats --delete --delete-excluded)
 FILENAME="$(basename $0)"
-LOG_FILE="$(realpath $0).log"
+LOG_FILE="$(realpath ${ENV_FILE}).log"
 TMP_FILE=$(mktemp)
 SUCCESS_COUNT=0
 FAILURE_COUNT=0
