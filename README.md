@@ -11,6 +11,7 @@ I created this script because I needed a way to backup my NAS and my Raspberry t
 - Incremental backup
 - Sends email report (requires email account)
 - Sends email alert on low space on backup drive
+- Option for a dry run without actually copying files
 
 ## Installation
 ### Setup identity keys
@@ -52,17 +53,24 @@ chmod 700 "${USERNAME}" "${USERNAME}/.ssh" "${USERNAME}/.ssh/authorized_keys" "/
 
 
 ### Setup script on local device
-1. Copy the script _ssh_rsync_backup.sh_ and _model.env.sh_ to optional folder on the device where the backup is going (local device).
+1. Copy the script _ssh_rsync_backup.sh_ and _model.env.sh_ to optional folder on the device where you want the backups (or clone this repository to wanted location).
 2. Set the file executable: `chmod +x ssh_rsync_backup.sh`.
 3. Create a copy of _model.env.sh_ (e.g. _my-raspberry.env.sh_) and edit it to fit your needs; _model.env.sh_ is well commented, you wouldn't have any difficulties doing this.
 
 > If you want to backup multiple devices, create multiple environmental files.
 
+**Usage of the script:**
+```
+ssh_rsync_backup.sh [-v] [-d] -e <environment file>
+-v: verbose
+-d: dry-run
+```
+
 Try running the script:
 ```
-/bin/bash <path to script> -e <my env file>
+/bin/bash <path to script> -v -e <my env file>
 ```
-The script creates a log-file in the same folder as the script (`environment_file_name.log`)..
+The script creates a log-file in the same folder as the script (`<environment_file_name>.log`)..
 
 ### Schedule periodic backup
 On the local device, edit the crontab:
@@ -71,7 +79,7 @@ sudo crontab -e
 ```
 Add this line:
 ```
-0 1 * * 3,6 /bin/bash <path to script> -e <path to environment file> # Will run at 1 am twice a week (wednesday and saturday). Search the internet for crontab syntax
+0 1 * * 3,6 /bin/bash <path to script> -ve <path to environment file> # Will run at 1 am twice a week (wednesday and saturday). Search the internet for crontab syntax.
 ```
 Save and exit
 
