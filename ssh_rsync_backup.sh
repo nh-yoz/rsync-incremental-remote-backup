@@ -43,6 +43,7 @@ if [ ! -f ${ENV_FILE} ]; then echo -e "The file '${ENV_FILE}' doesn't exist.\n";
 # Initializing constants;
 RSYNC_OPTIONS=(-a --stats --delete --delete-excluded)
 FILENAME="$(basename $0)"
+ENV_FILENAME="$(basename ${ENV_FILE})"
 LOG_FILE="$(realpath ${ENV_FILE}).log"
 TMP_FILE=$(mktemp)
 SUCCESS_COUNT=0
@@ -80,6 +81,7 @@ GetDateTime() {
 Log "**************************************
 **  Running script "$FILENAME" $([ $DRY_RUN -eq 1 ] && echo "(Dry run)")
 **  Date: $(GetDateTime)
+**  Env-file: ${ENV_FILE}
 **************************************"
 
 # Check if destination is mounted and folder exists
@@ -163,7 +165,7 @@ SendEmail() { # Sends mail using declared constants. Requires one argument: The 
 if [ $SEND_REPORT == "A" ] || { [ $SEND_REPORT == "F" ] && [ $FAILURE_COUNT -gt 0 ]; }
 then
     echo -e "\n# Sending report by email..." | tee -a "$LOG_FILE"
-    [ $FAILURE_COUNT -gt 0 ] && SUBJECT="$FILENAME - FAILURE \($FAILURE_COUNT\)" || SUBJECT="$FILENAME - SUCCESS"
+    [ $FAILURE_COUNT -gt 0 ] && SUBJECT="$FILENAME ($ENV_FILENAME) - FAILURE \($FAILURE_COUNT\)" || SUBJECT="$FILENAME ($ENV_FILENAME) - SUCCESS"
     sed -i "1iFrom: $EMAIL_USERNAME <$EMAIL_FROM>\nTo: $EMAIL_RECIPIENT\nSubject: $SUBJECT\n\n" "$TMP_FILE"
     SendEmail "$TMP_FILE"
 fi
