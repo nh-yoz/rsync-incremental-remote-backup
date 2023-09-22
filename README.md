@@ -5,6 +5,8 @@ The script uses `rsync` for the backup and connects using `ssh` with public/priv
 
 I created this script because I needed a way to backup my NAS and my Raspberry to an external device - located at my parents' - if anything would happen (fire, burglary, disk corruption, ...). 
 
+![rsync2](https://github.com/nh-yoz/rsync-incremental-remote-backup/assets/82522085/6ce3766b-7444-49c8-9fc0-2a8d539a83ad)
+
 ## Features
 - Multiple folders
 - Exclude files/folders
