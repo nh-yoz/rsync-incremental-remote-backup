@@ -1,13 +1,14 @@
 # Incremental backup from remote
 ## Introduction
-A script allowing to do backup from a remote device (server) to a local device (client).
+This is a script allowing to backup folder(s) of one or multiple servers from a client device.
 The script uses `rsync` for the backup and connects using `ssh` with public/private identity keys.
 
-I created this script because I needed a way to backup my NAS and my Raspberry to an external device - located at my parents' - if anything would happen (fire, burglary, disk corruption, ...). 
+I created this script because I needed a way to backup my NAS and my Raspberry to an external device located at my parents' in case something bad would happen  (fire, burglary, disk corruption, earthquake, nuclear attack, ...). 
 
 ![rsync2](https://github.com/nh-yoz/rsync-incremental-remote-backup/assets/82522085/6ce3766b-7444-49c8-9fc0-2a8d539a83ad)
 
 ## Features
+- Multiple source servers
 - Multiple folders
 - Exclude files/folders
 - Incremental backup
@@ -66,7 +67,7 @@ chmod 700 "${USERNAME}" "${USERNAME}/.ssh" "${USERNAME}/.ssh/authorized_keys" "/
 ssh_rsync_backup.sh [-v] [-d] -e <environment file>
 -v: verbose
 -d: dry-run
--e: the path to the environment to use (required)
+-e: the path to the environment file to use (required)
 ```
 
 Try running the script:
