@@ -49,7 +49,7 @@ USERNAME=<username>
 cd /var/services/home
 chmod 700 "${USERNAME}" "${USERNAME}/.ssh" "${USERNAME}/.ssh/authorized_keys" "/volume1/homes/${USERNAME}"
 ```
-> On a synology NAS, _root_ is not allowed running rsync over ssh so make sure you are using another user in _admin_ group
+> On a synology NAS, by default, _root_ is not allowed running rsync over ssh so make sure you are using another user in _admin_ group. If you really need to run rsync as root (backing up /volume1/homes for instance), enable the admin account in DSM's control panel: Users > admin.
 
 
 ### Setup script on local device
@@ -64,6 +64,7 @@ chmod 700 "${USERNAME}" "${USERNAME}/.ssh" "${USERNAME}/.ssh/authorized_keys" "/
 ssh_rsync_backup.sh [-v] [-d] -e <environment file>
 -v: verbose
 -d: dry-run
+-e: the path to the environment to use (required)
 ```
 
 Try running the script:
