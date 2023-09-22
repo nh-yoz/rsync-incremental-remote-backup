@@ -89,5 +89,5 @@ Add this line:
 ```
 Save and exit
 
-> _crontab_ is running as root, make sure the path to the file is valid as the user `root`.
+> _crontab_ is running as root, make sure the path to the file is valid as the user `root` (i.e. use absolute paths).
 
