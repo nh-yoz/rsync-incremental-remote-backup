@@ -42,6 +42,8 @@ If your changed the file, reload the daemon:
 ```
 sudo systemctl restart sshd
 ```
+
+#### Synology special case
 If you still cannot connect or are prompted for a password, try the set the privileges on the following folders and files to 700 :
 - /var/services/home/<username>
 - /var/services/home/<username>/.ssh
