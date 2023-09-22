@@ -74,7 +74,7 @@ ssh_rsync_backup.sh [-v] [-d] -e <environment file>
 
 Try running the script:
 ```
-/bin/bash <path to script> -v -e <my env file>
+/bin/bash <path to script> -v -d -e <my env file>
 ```
 The script creates a log-file in the same folder as the script (`<environment_file_name>.log`)..
 
