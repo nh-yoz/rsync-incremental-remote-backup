@@ -24,6 +24,9 @@ Usage() {
     echo -e "Usage: ssh_rsync_backup.sh [-v] [-d] -e <environment file>\n-v: verbose\n-d: dry-run\n"
 }
 
+RSYNC_OPTIONS=()
+DRY_RUN=0
+
 while getopts "vde:" opt
 do
     case $opt in
@@ -41,11 +44,11 @@ if [ ! -f ${ENV_FILE} ]; then echo -e "The file '${ENV_FILE}' doesn't exist.\n";
 . ${ENV_FILE}
 
 # Initializing constants;
-RSYNC_OPTIONS=(-a --stats --delete --delete-excluded)
+TMP_FILE=$(mktemp)
+RSYNC_OPTIONS+=(-a --stats --delete --delete-excluded --log-file="${TMP_FILE}") 
 FILENAME="$(basename $0)"
 ENV_FILENAME="$(basename ${ENV_FILE})"
 LOG_FILE="$(realpath ${ENV_FILE}).log"
-TMP_FILE=$(mktemp)
 SUCCESS_COUNT=0
 FAILURE_COUNT=0
 
@@ -110,17 +113,19 @@ do
    fi
    Log "Source: ${SSH_LOGIN}@${SSH_HOST}:${_PATH}/"
    Log "Destination: ${RSYNC_DEST_PATH}/"
-   rsync ${RSYNC_OPTIONS[@]} ${LINK_DEST_OPTION} -e "ssh -i ${SSH_ID_PATH} -p ${SSH_PORT} -o StrictHostKeyChecking=no" ${SSH_LOGIN}@${SSH_HOST}:${_PATH}/ "${RSYNC_DEST_PATH}/" | tee -a $TMP_FILE
+   rsync ${RSYNC_OPTIONS[@]} ${LINK_DEST_OPTION} -e "ssh -i ${SSH_ID_PATH} -p ${SSH_PORT} -o StrictHostKeyChecking=no" ${SSH_LOGIN}@${SSH_HOST}:${_PATH}/ "${RSYNC_DEST_PATH}/"
 
    EXIT_CODE=$?
    Log "* rsync exited with status code $EXIT_CODE"
    if [ $EXIT_CODE -eq 0 ]
    then # rsync succeded
         ((SUCCESS_COUNT+=1))
-        if [ ! $DRY_RUN -eq 1 ]
+        if [ $DRY_RUN -ne 1 ]
         then
+            Log "* Deleteing old symbolic link to latest (if exists)"
             # Delete symbolic link latest
             rm -f "${LATEST_LINK}"
+	    Log "* Creating new symbolic link to latest"
             # Create symbolic link to the recent created folder
             ln -s "${RSYNC_DEST_PATH}" "${LATEST_LINK}"
         fi
@@ -149,7 +154,7 @@ done
 RUNNING=False
 
 # Append log 
-[ ! $DRY_RUN -eq 1 ] && cat "$TMP_FILE" >> "$LOG_FILE"
+[ $DRY_RUN -ne 1 ] && cat "$TMP_FILE" >> "$LOG_FILE"
 
 SendEmail() { # Sends mail using declared constants. Requires one argument: The message file
     curl "$EMAIL_PROTOCOL://$EMAIL_HOST:$EMAIL_PORT" --mail-rcpt "$EMAIL_RECIPIENT" --upload-file "$1" --user "$EMAIL_USERNAME:$EMAIL_PASSWORD" $VERBOSE
@@ -183,3 +188,4 @@ fi
 
 # Delete tmp file
 rm -f "$TMP_FILE"
+
