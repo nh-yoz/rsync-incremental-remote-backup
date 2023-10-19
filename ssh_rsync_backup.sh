@@ -8,11 +8,11 @@
 # DESCRIPTION
 # Incremental backup of a list of remote folders to a local folder
 #
-# LICENCE: WTFPL - comes with no warranty 
+# LICENCE: WTFPL - comes with no warranty
 #
 # Options
 # -v verbose output (affects rsync and curl)
-# -d dry run (don't copy/delete files) 
+# -d dry run (don't copy/delete files)
 # -e <environment file> (required)
 #
 # VERSIONS (number | date | author | Description)
@@ -45,7 +45,7 @@ if [ ! -f ${ENV_FILE} ]; then echo -e "The file '${ENV_FILE}' doesn't exist.\n";
 
 # Initializing constants;
 TMP_FILE=$(mktemp)
-RSYNC_OPTIONS+=(-a --stats --delete --delete-excluded --log-file="${TMP_FILE}") 
+RSYNC_OPTIONS+=(-a --stats --delete --delete-excluded --log-file="${TMP_FILE}")
 FILENAME="$(basename $0)"
 ENV_FILENAME="$(basename ${ENV_FILE})"
 LOG_FILE="$(realpath ${ENV_FILE}).log"
@@ -88,11 +88,11 @@ Log "**************************************
 **************************************"
 
 # Check if destination is mounted and folder exists
-[ ! -d "$DESTINATION_ROOT" ] && Log "Destination $DESTINATION_ROOT is not mounted or folder is missing." && FAILURE_COUNT=1
+[ ! -d "$DESTINATION_ROOT" ] && Log "ERROR: Destination $DESTINATION_ROOT is not mounted or folder is missing." && FAILURE_COUNT=1
 
 # Trying ssh connection
 ssh -i "$SSH_ID_PATH" -p $SSH_PORT -o ConnectTimeout=5 -o ConnectionAttempts=1 -o StrictHostKeyChecking=no $SSH_LOGIN@$SSH_HOST exit
-[ $? -ne 0 ] && Log "Impossible to connect to distant serveur!" && FAILURE_COUNT=1
+[ $? -ne 0 ] && Log "ERROR: Impossible to connect to distant serveur!" && FAILURE_COUNT=1
 
 # Create folder structure and run rsync for each folder
 RUNNING=True
@@ -102,7 +102,7 @@ do
    LATEST_LINK="${DESTINATION_PATH}/latest"
    RSYNC_DEST_PATH="${DESTINATION_PATH}/$(GetDateTime)"
    mkdir -p "${RSYNC_DEST_PATH}"
-   [ ! $? -eq 0 ] && Log "Cannot create folder ${RSYNC_DEST_PATH}" && ((FAILURE_COUNT+=1))
+   [ ! $? -eq 0 ] && Log "ERROR: Cannot create folder ${RSYNC_DEST_PATH}" && ((FAILURE_COUNT+=1))
    Log "\n***** $(GetDateTime): Running rsync for ${_PATH}..."
    if [ ! -d "${LATEST_LINK}" ] # Symbolic link to latest doesn't exist -> first run
    then
@@ -133,27 +133,27 @@ do
         ((FAILURE_COUNT+=1))
         rm -rf "${RSYNC_DEST_PATH}"
     fi
-    
     [ $DRY_RUN -eq 1 ] && rm -rf "$RSYNC_DEST_PATH" > /dev/null 2>&1
+
     # Delete old backups
     if [ $MAX_INCREMENT -gt 0 ]
     then
         Log "* Deleting old backups (keep last ${MAX_INCREMENT})"
         COUNT=0
-        find "${DESTINATION_PATH}" -maxdepth 1 -type d | sort -r | while read FOLDERNAME; do
+        while read FOLDERNAME; do
             ((COUNT+=1))
-            if [ $COUNT -gt $MAX_INCREMENT ] && [ ! "$FOLDERNAME" == "$DESTINATION_PATH" ] && [ ! $DRY_RUN -eq 1 ]
+            if [ $COUNT -gt $MAX_INCREMENT ]
             then
-                rm -rf "$FOLDERNAME"
-                [ $? -eq 0 ] && Log "Deleted folder: ${FOLDERNAME}" || Log "Error deleting ${FOLDERNAME}" && ((FAILURE_COUNT+=1))
+                [ ! $DRY_RUN -eq 1 ] && rm -rf "$FOLDERNAME"
+                [ $? -eq 0 ] || [ $DRY_RUN -eq 1 ] && Log "Deleted folder: ${FOLDERNAME}" || Log "ERROR deleting ${FOLDERNAME}" && ((FAILURE_COUNT+=1))
             fi
-        done
+        done < <(find "${DESTINATION_PATH}" -maxdepth 1 -type d -regex "${DESTINATION_PATH}/20[2-5][0-9]-[01][0-9]-[0-3][0-9]_[0-2][0-9]h[0-5][0-9]m[0-5][0-9]s" | sort -r)
     fi
     Log "***** $(GetDateTime): Completed rsync for ${_PATH}."
 done
 RUNNING=False
 
-# Append log 
+# Append log
 [ $DRY_RUN -ne 1 ] && cat "$TMP_FILE" >> "$LOG_FILE"
 
 SendEmail() { # Sends mail using declared constants. Requires one argument: The message file
@@ -162,8 +162,8 @@ SendEmail() { # Sends mail using declared constants. Requires one argument: The 
     then
         echo "Email sent to $EMAIL_RECIPIENT" | tee -a "$LOG_FILE"
     else
-        echo "Error sending email" | tee -a "$LOG_FILE"
-    fi 
+        echo "ERROR sending email" | tee -a "$LOG_FILE"
+    fi
 }
 
 # Send email
@@ -188,4 +188,3 @@ fi
 
 # Delete tmp file
 rm -f "$TMP_FILE"
-
